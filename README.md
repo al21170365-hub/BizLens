@@ -1,4 +1,4 @@
-# 🗺️ LensMap 3000
+# 🗺️ BizLens
 
 > **Filter & Discover Businesses on an Interactive Map**
 
