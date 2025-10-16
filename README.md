@@ -15,14 +15,14 @@ BizLens is a web application that enables users to filter and visualize business
 
 ## 🚀 Goals
 
-- **Interactive Business Filtering**: Create a page where users can filter one business by type and view recommendations on a map
-- **Smart Recommendations**: Implement a recommendation system that suggests relevant businesses based on selected filters
-- **Enhanced Filtering**: (Stretch Goal) Add additional filters and expand recommendation variety if time permits
+- Create a page where users can filter one business by type and view one recommendations on a map
+- Implement a recommendation system that suggests relevant businesses based on selected filters
+- (Stretch Goal) Add additional filters and expand recommendation variety if time permits
 
 ## ⚠️ Non-Goals
 
-- **Limited Coverage**: Will not include all existing businesses
-- **Basic Recommendations**: Initial recommendations will focus on less saturated areas for select one business types
+-  Will not include all existing businesses
+- Initial recommendations will focus on less saturated areas for select one business types
 
 ## 📋 Background
 
