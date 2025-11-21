@@ -62,8 +62,8 @@ def load_municipio_data(municipio):
         elif municipio_lower == "tijuana":
             main_db, backup_db = main_data_bases[6], backup_data_bases[6]
         else:
-            return None, f"Error: Municipio '{municipio}' not found"
-        
+            return None, f"Error: Municipio '{municipio}' not found in the data base"
+        print("im almost in")
         # Try main Excel database first
         if os.path.exists(main_db):
             df = pd.ExcelFile(main_db)
@@ -71,11 +71,11 @@ def load_municipio_data(municipio):
             current_data_type = 'excel'
             return df, None
         # Fall back to SQLite database
-        elif os.path.exists(backup_db):
-            conn = sqlite3.connect(backup_db)
-            current_data_source = conn
-            current_data_type = 'sqlite'
-            return conn, None
+        #elif os.path.exists(backup_db):
+        #    conn = sqlite3.connect(backup_db)
+        #    current_data_source = conn
+        #    current_data_type = 'sqlite'
+        #    return conn, None
         else:
             return None, f"Error: No database found for municipio '{municipio}'"
             
@@ -114,21 +114,28 @@ def get_data(data_source):
         columns={'id(PK)_x': 'id'}
     )
 
-def get_page(data_source,value,page_number=1, page_size=10,type=True):
+def get_page(data_source,value,fecha,page_number, page_size,type=True):
     if type:
-        matching_rows = data_source[data_source['nom_estab'].str.contains(value, case = False)]
+        if not fecha:
+            matching_rows = data_source[data_source['nom_estab'].str.contains(value, case = False)]
+        else:
+            matching_rows = data_source[
+                (data_source['nom_estab'].str.contains(value, case=False)) & 
+                (data_source['fecha_alta'] >= fecha)
+            ]
     else:
         matching_rows = data_source[data_source['fecha_alta'] == value]
     start_idx = (page_number - 1) * page_size
     end_idx = start_idx + page_size
-    return matching_rows.iloc[start_idx:end_idx]
+    return matching_rows.iloc[start_idx:end_idx],len(matching_rows)
 
 @app.route("/api/exel/negocio", methods=['GET'])
 def search():
-    word = request.args.get('word')
     municipio = request.args.get('municipio')
+    word = request.args.get('word')
+    fecha = request.args.get('date')
     page = int(request.args.get('page',1))
-    per_page = int(request.args.get('per_page',10))
+    per_page = int(request.args.get('per_page',100))
 
     if not word:
         return jsonify({
@@ -147,22 +154,37 @@ def search():
             "success": False,
             "message": "Error: municipio parameter is required. Use ?municipio=ensenada"
         }), 400
-
+    
+    if fecha and len(fecha) != 10:
+        return jsonify({
+            "success": False,
+            "message": f"Please try again with these format: YYYY/MM/DD, u used: {fecha}"
+        }),400
     # Load municipality data
     data_source, error = load_municipio_data(municipio)
     if error:
         return jsonify({
             "success": False,
             "message": error
-        }), 400
+        }), 500
 
     combinado = get_data(data_source)
     
-    matching_rows = get_page(combinado,word,page,per_page)
-    total_items = len(combinado)
+    data_per_page,matching_rows = get_page(combinado,word,fecha,page,per_page)
+    if matching_rows == 0 and fecha:
+        return jsonify({
+            "success": False,
+            "message": f"Sorry, please try again with diferent date, coundt find a company with '{fecha}'"
+        }),404
+    if matching_rows == 0 and not fecha:
+        return jsonify({
+            "success": False,
+            "message": f"Sorry, please try again with diferent word, coundt find a company with '{word}'"
+        }),404
+    total_items = matching_rows
     total_pages = ceil(total_items/per_page)
     rows = []
-    for index, row in matching_rows.iterrows():
+    for index, row in data_per_page.iterrows():
         row_dict = row.to_dict()
         rows.append(row_dict)
 
@@ -190,7 +212,7 @@ def filter_search():
     fecha = request.args.get('date')
     municipio = request.args.get('municipio')
     page = int(request.args.get('page',1))
-    per_page = int(request.args.get('per_page',10))
+    per_page = int(request.args.get('per_page',20))
 
     if not fecha:
         return jsonify({
