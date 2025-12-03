@@ -1,2 +1,2 @@
 FROM python:3
-RUN pip install flask pandas openpyxl
+RUN pip install Flask pandas openpyxl

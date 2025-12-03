@@ -8,30 +8,31 @@ import os
 app = Flask(__name__)
 
 main_data_bases = [
-    "./exel_data/Establecimientos_Ensenada_BJCA.xlsx",
-    "./exel_data/Establecimientos_Mexicali_BJCA.xlsx",
-    "./exel_data/Establecimientos_Playas_de_Rosarito_BJCA.xlsx",
-    "./exel_data/Establecimientos_San_Felipe_BJCA.xlsx",
-    "./exel_data/Establecimientos_San_Quintin_BJCA.xlsx",
-    "./exel_data/Establecimientos_Tecate_BJCA.xlsx",
-    "./exel_data/Establecimientos_Tijuana_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Ensenada_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Mexicali_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Playas_de_Rosarito_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_San_Felipe_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_San_Quintin_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Tecate_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Tijuana_BJCA.xlsx",
 ]
 backup_data_bases = [
-    "./sqlite_data/Ensenada_Baja_California.db",
-    "./sqlite_data/Mexicali_Baja_California.db",
-    "./sqlite_data/Playas_de_Rosarito_Baja_California.db",
-    "./sqlite_data/San_Felipe_Baja_California.db",
-    "./sqlite_data/San_Quintin_Baja_California.db",
-    "./sqlite_data/Tecate_Baja_California.db",
-    "./sqlite_data/Tijuana_Baja_California.db",
+    "./code/sqlite_data/Ensenada_Baja_California.db",
+    "./code/sqlite_data/Mexicali_Baja_California.db",
+    "./code/sqlite_data/Playas_de_Rosarito_Baja_California.db",
+    "./code/sqlite_data/San_Felipe_Baja_California.db",
+    "./code/sqlite_data/San_Quintin_Baja_California.db",
+    "./code/sqlite_data/Tecate_Baja_California.db",
+    "./code/sqlite_data/Tijuana_Baja_California.db",
 ]
 
 # Global variables to store current database connection
 current_data_source = None
 current_data_type = None
 
-@app.route("/")
+@app.route("/api")
 def working():
+    print("Hello wordl")
     return jsonify({
         "success": True,
         "message": "App up and runing!"
@@ -42,7 +43,7 @@ def load_municipio_data(municipio):
     global current_data_source, current_data_type
     
     if not municipio:
-        return None, "Error: Municipio parameter is required."
+        return None, None, "Error: Municipio parameter is required."
 
     try:
         municipio_lower = municipio.lower()
@@ -62,60 +63,63 @@ def load_municipio_data(municipio):
         elif municipio_lower == "tijuana":
             main_db, backup_db = main_data_bases[6], backup_data_bases[6]
         else:
-            return None, f"Error: Municipio '{municipio}' not found in the data base"
-        print("im almost in")
+            return None, None, f"Error: Municipio '{municipio}' not found in the data base"
         # Try main Excel database first
         if os.path.exists(main_db):
             df = pd.ExcelFile(main_db)
             current_data_source = df
             current_data_type = 'excel'
-            return df, None
+            return df, 'exel', None
         # Fall back to SQLite database
-        #elif os.path.exists(backup_db):
-        #    conn = sqlite3.connect(backup_db)
-        #    current_data_source = conn
-        #    current_data_type = 'sqlite'
-        #    return conn, None
+        elif os.path.exists(backup_db):
+            conn = sqlite3.connect(backup_db)
+            current_data_source = conn
+            current_data_type = 'sqlite'
+            return conn, 'sqlite', None
         else:
-            return None, f"Error: No database found for municipio '{municipio}'"
+            return None, None, f"Error: No database found for municipio '{municipio}'"
             
     except Exception as e:
-        return None, f"Error loading data: {str(e)}"
+        return None, None, f"Error loading data: {str(e)}"
 
-def get_data(data_source):
-    establecimientos = pd.read_excel(data_source, sheet_name='establecimientos')
-    nombres = pd.read_excel(data_source, sheet_name='nombres_establecimientos')
-    actividades = pd.read_excel(data_source, sheet_name='actividades')
-    direcciones = pd.read_excel(data_source, sheet_name='direcciones_geo')
+def get_data(data_source,type_of=True):
+    if type_of:
+        establecimientos = pd.read_excel(data_source, sheet_name='establecimientos')
+        nombres = pd.read_excel(data_source, sheet_name='nombres_establecimientos')
+        actividades = pd.read_excel(data_source, sheet_name='actividades')
+        direcciones = pd.read_excel(data_source, sheet_name='direcciones_geo')
 
-    combinado = pd.merge(
-        establecimientos[['id(PK)','nom_estab(FK)', 'codigo_act(FK)', 'fecha_alta', 'dirs_geo(FK)']],
-        direcciones[['id(PK)', 'latitud', 'longitud']],
-        left_on='dirs_geo(FK)',
-        right_on='id(PK)',
-        how='left'
-    )
-    combinado = pd.merge(
-        combinado,
-        nombres[['id(PK)', 'nom_estab']],   
-        left_on='nom_estab(FK)',
-        right_on='id(PK)',
-        how='left'
-    )
-    combinado = pd.merge(
-        combinado,
-        actividades[['codigo_act(PK)', 'nombre_act']],   
-        left_on='codigo_act(FK)',
-        right_on='codigo_act(PK)',
-        how='left'
-    )
+        combinado = pd.merge(
+            establecimientos[['id(PK)','nom_estab(FK)', 'codigo_act(FK)', 'fecha_alta', 'dirs_geo(FK)']],
+            direcciones[['id(PK)', 'latitud', 'longitud']],
+            left_on='dirs_geo(FK)',
+            right_on='id(PK)',
+            how='left'
+        )
+        combinado = pd.merge(
+            combinado,
+            nombres[['id(PK)', 'nom_estab']],   
+            left_on='nom_estab(FK)',
+            right_on='id(PK)',
+            how='left'
+        )
+        combinado = pd.merge(
+            combinado,
+            actividades[['codigo_act(PK)', 'nombre_act']],   
+            left_on='codigo_act(FK)',
+            right_on='codigo_act(PK)',
+            how='left'
+        )
 
-    return combinado[['id(PK)_x','nom_estab', 'nombre_act', 'latitud', 'longitud', 'fecha_alta']].rename(
-        columns={'id(PK)_x': 'id'}
-    )
+        return combinado[['id(PK)_x','nom_estab', 'nombre_act', 'latitud', 'longitud', 'fecha_alta']].rename(
+            columns={'id(PK)_x': 'id'}
+        )
+    else:
+        cursor = data_source.cursor()
+        return cursor
 
-def get_page(data_source,value,fecha,page_number, page_size,type=True):
-    if type:
+def get_page(data_source,value,fecha,page_number, page_size,type):
+    if type == "exel":
         if not fecha:
             matching_rows = data_source[data_source['nom_estab'].str.contains(value, case = False)]
         else:
@@ -124,13 +128,29 @@ def get_page(data_source,value,fecha,page_number, page_size,type=True):
                 (data_source['fecha_alta'] >= fecha)
             ]
     else:
-        matching_rows = data_source[data_source['fecha_alta'] == value]
+        if not fecha:
+            cursor.execute('''
+                SELECT e.*, a.nombre_act
+                FROM establecimientos e 
+                LEFT JOIN actividades a ON e.codigo_act = a.codigo_act
+                WHERE LOWER(e.nom_estab) LIKE LOWER(?) 
+            ''', (f'%{value}%'))
+        else:
+            cursor.execute('''
+                SELECT e.*, a.nombre_act
+                FROM establecimientos e 
+                LEFT JOIN actividades a ON e.codigo_act = a.codigo_act
+                WHERE LOWER(e.nom_estab) LIKE LOWER(?) 
+                AND e.fecha_alta >= ?
+            ''', (f'%{value}%', fecha))
+        matching_rows = cursor.fetchall()
+
     start_idx = (page_number - 1) * page_size
     end_idx = start_idx + page_size
     return matching_rows.iloc[start_idx:end_idx],len(matching_rows)
 
 @app.route("/api/exel/negocio", methods=['GET'])
-def search():
+def search_exel():
     municipio = request.args.get('municipio')
     word = request.args.get('word')
     fecha = request.args.get('date')
@@ -161,7 +181,7 @@ def search():
             "message": f"Please try again with these format: YYYY/MM/DD, u used: {fecha}"
         }),400
     # Load municipality data
-    data_source, error = load_municipio_data(municipio)
+    data_source, type_of, error = load_municipio_data(municipio)
     if error:
         return jsonify({
             "success": False,
@@ -170,7 +190,7 @@ def search():
 
     combinado = get_data(data_source)
     
-    data_per_page,matching_rows = get_page(combinado,word,fecha,page,per_page)
+    data_per_page,matching_rows = get_page(combinado,word,fecha,page,per_page,type_of)
     if matching_rows == 0 and fecha:
         return jsonify({
             "success": False,
@@ -207,23 +227,26 @@ def search():
         "data": data
     }), 200
 
-@app.route("/api/exel/negocio/fecha", methods=['GET'])
-def filter_search():
-    fecha = request.args.get('date')
+@app.route("/api/sqlite/negocio", methods=['GET'])
+def search_sqlite():
     municipio = request.args.get('municipio')
+    word = request.args.get('word')
+    fecha = request.args.get('date')
     page = int(request.args.get('page',1))
-    per_page = int(request.args.get('per_page',20))
+    per_page = int(request.args.get('per_page',100))
+    if fecha == "2025/10/10":
+        fecha = None
 
-    if not fecha:
+    if not word:
         return jsonify({
             "success": False,
-            "message": "Error: Date parameter is required. Use ?date=YYYY/MM/DD"
+            "message": "Error: word parameter is required. Use ?word=tacos"
         }), 400
 
-    if len(fecha) != 10 or fecha.count('/') != 2:
+    if len(word) < 4:
         return jsonify({
             "success": False,
-            "message": "Error: Date format: YYYY/MM/DD"
+            "message": "The search word needs to be equal or greater than four characters"
         }), 400
 
     if not municipio:
@@ -231,29 +254,44 @@ def filter_search():
             "success": False,
             "message": "Error: municipio parameter is required. Use ?municipio=ensenada"
         }), 400
-
+    
+    if fecha and len(fecha) != 10:
+        return jsonify({
+            "success": False,
+            "message": f"Please try again with these format: YYYY/MM/DD, u used: {fecha}"
+        }),400
     # Load municipality data
-    data_source, error = load_municipio_data(municipio)
+    data_source, type_of, error = load_municipio_data(municipio)
     if error:
         return jsonify({
             "success": False,
             "message": error
-        }), 400
-    
-    combinado = get_data(data_source)
+        }), 500
 
-    matching_rows = get_page(combinado,fecha,page,per_page,False)
-    total_items = len(combinado)
+    combinado = get_data(data_source)
+    
+    data_per_page,matching_rows = get_page(combinado,word,fecha,page,per_page,type_of)
+    if matching_rows == 0 and fecha:
+        return jsonify({
+            "success": False,
+            "message": f"Sorry, please try again with diferent date, coundt find a company with '{fecha}'"
+        }),404
+    if matching_rows == 0 and not fecha:
+        return jsonify({
+            "success": False,
+            "message": f"Sorry, please try again with diferent word, coundt find a company with '{word}'"
+        }),404
+    total_items = matching_rows
     total_pages = ceil(total_items/per_page)
     rows = []
-    for index, row in matching_rows.iterrows():
+    for index, row in data_per_page.iterrows():
         row_dict = row.to_dict()
         rows.append(row_dict)
 
     data = {
         "contract": "C2",
         "date": date.today(),
-        "date_filter": fecha,
+        "word_filter": word,
         "page": page,
         "per_page": per_page,
         "total_items": total_items,
@@ -265,7 +303,6 @@ def filter_search():
     
     return jsonify({
         "success": True,
-        "message": "Companies found successfully by date filter",
+        "message": "Companies found successfully",
         "data": data
     }), 200
-

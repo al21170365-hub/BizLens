@@ -2,3 +2,5 @@ Flask
 pandas
 openpyxl
 streamlit
+PyJWT
+werkzeug

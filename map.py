@@ -7,8 +7,26 @@ if 'page' not in st.session_state:
     st.session_state.page = 1
 
 def get_negocio(municipio, word, fecha, page):
+    """
+    Fetch business data from API with fallback to SQLite endpoint.
+    
+    Args:
+        municipio: Municipality parameter
+        word: Search word parameter
+        fecha: Date parameter
+        page: Page number for pagination
+    
+    Returns:
+        JSON response data or None if all requests fail
+    """
+    # Base URLs
+    excel_url = f"http://localhost/api/exel/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}"
+    sqlite_url = f"http://localhost/api/sqlite/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}"
+    
     try:
-        response = requests.get(f"http://127.0.0.1:5000/api/exel/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}")
+        # First attempt: Excel API
+        response = requests.get(excel_url, timeout=20)
+        
         if response.status_code == 400:
             error_data = response.json()
             st.info(f"{error_data.get('message', 'Invalid date format')}")
@@ -21,14 +39,24 @@ def get_negocio(municipio, word, fecha, page):
 
         if response.status_code == 500:
             error_data = response.json()
-            st.info(f"{error_data.get('message', 'Data not found')}")
+            st.info(f"{error_data.get('message', 'Internal server error')}")
             return None
 
         response.raise_for_status()
         return response.json()
+        
     except requests.exceptions.RequestException as e:
-        st.error(f"Error fetching data: {e}")
-        return None
+        st.warning(f"Excel API failed, trying SQLite fallback: {e}")
+        
+        try:
+            # Fallback attempt: SQLite API
+            response = requests.get(sqlite_url, timeout=10)
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.RequestException as fallback_error:
+            st.error(f"Both API endpoints failed. SQLite error: {fallback_error}")
+            return None
 
 def get_cords(data):
     lat = []
