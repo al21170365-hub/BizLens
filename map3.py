@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import requests
 import pydeck as pdk  # Added for better map visualization
-import random
 
 # Initialize session state for page tracking and data caching
 if 'page' not in st.session_state:
@@ -11,54 +10,6 @@ if 'current_data' not in st.session_state:
     st.session_state.current_data = None
 if 'search_params' not in st.session_state:
     st.session_state.search_params = {}
-
-# Función para generar colores únicos basados en códigos postales
-def generate_colors_for_postal_codes(postal_codes):
-    """
-    Genera un color único para cada código postal diferente.
-    
-    Args:
-        postal_codes: Lista de códigos postales
-    
-    Returns:
-        Dict: Mapeo de código postal a color [R, G, B, A]
-    """
-    unique_codes = sorted(list(set(postal_codes)))
-    color_map = {}
-    
-    # Colores predefinidos para mejor visibilidad
-    predefined_colors = [
-        [255, 0, 0, 160],    # Rojo
-        [0, 255, 0, 160],    # Verde
-        [0, 0, 255, 160],    # Azul
-        [255, 255, 0, 160],  # Amarillo
-        [255, 0, 255, 160],  # Magenta
-        [0, 255, 255, 160],  # Cian
-        [255, 165, 0, 160],  # Naranja
-        [128, 0, 128, 160],  # Púrpura
-        [165, 42, 42, 160],  # Marrón
-        [0, 128, 0, 160],    # Verde oscuro
-        [128, 128, 0, 160],  # Oliva
-        [0, 128, 128, 160],  # Verde azulado
-        [128, 0, 0, 160],    # Rojo oscuro
-        [0, 0, 128, 160],    # Azul marino
-        [128, 128, 128, 160], # Gris
-    ]
-    
-    # Asignar colores predefinidos primero, luego generar aleatorios si hay más
-    for i, code in enumerate(unique_codes):
-        if i < len(predefined_colors):
-            color_map[code] = predefined_colors[i]
-        else:
-            # Generar color aleatorio pero evitando colores muy claros
-            color_map[code] = [
-                random.randint(30, 225),  # R
-                random.randint(30, 225),  # G
-                random.randint(30, 225),  # B
-                160  # Alpha (transparencia)
-            ]
-    
-    return color_map
 
 def get_negocio(municipio, word, fecha, page):
     """
@@ -135,7 +86,6 @@ def get_cords(data):
         lon: List of longitudes
         names: List of business names
         activities: List of business activities
-        postal_codes: List of postal codes
         df_data: DataFrame with complete business info
     """
     lat = []
@@ -173,82 +123,56 @@ def get_cords(data):
     
     return lat, lon, names, activities, postal_codes, pd.DataFrame(df_data)
 
-def create_map_dataframe(lat, lon, names, activities, postal_codes):
+def create_map_dataframe(lat, lon, names, activities):
     """Create DataFrame for Streamlit map visualization."""
     if not lat or not lon:
         return pd.DataFrame()
     
-    # Generate color mapping for postal codes
-    color_map = generate_colors_for_postal_codes(postal_codes)
-    
-    # Create DataFrame for map with colors
+    # Create DataFrame for map
     data = {
         'lat': lat,
         'lon': lon,
         'name': names,
         'activity': activities,
-        'postal_code': postal_codes,
-        'color': [color_map.get(code, [200, 30, 0, 160]) for code in postal_codes],
         'size': [15] * len(lat)  # Fixed size for all markers
     }
     
-    return pd.DataFrame(data), color_map
+    return pd.DataFrame(data)
 
-def create_pydeck_layer(df, color_map):
-    """Create a PyDeck layer for more advanced visualization with colored points."""
+def create_pydeck_layer(df):
+    """Create a PyDeck layer for more advanced visualization."""
     if df.empty:
         return None
     
-    # Create a layer with colors based on postal code
     layer = pdk.Layer(
         'ScatterplotLayer',
         data=df,
         get_position=['lon', 'lat'],
-        get_color='color',  # Usar la columna de color
+        get_color='[200, 30, 0, 160]',  # RGBA color
         get_radius=50,
         pickable=True,
-        auto_highlight=True,
-        filled=True,
-        stroked=True,
-        line_width_scale=1,
-        line_width_min_pixels=1
+        auto_highlight=True
     )
     
-    # Calculate center of the map
-    if not df.empty:
-        center_lat = df['lat'].mean()
-        center_lon = df['lon'].mean()
-    else:
-        center_lat, center_lon = 32.5333, -117.0167  # Default center (Tijuana)
-    
     view_state = pdk.ViewState(
-        latitude=center_lat,
-        longitude=center_lon,
+        latitude=df['lat'].mean(),
+        longitude=df['lon'].mean(),
         zoom=11,
         pitch=0
     )
     
-    # Create tooltip with postal code information
     tooltip = {
-        "html": """
-        <div style="padding: 10px; background-color: #2E2E2E; color: white; border-radius: 5px;">
-            <b>Business:</b> {name}<br/>
-            <b>Activity:</b> {activity}<br/>
-            <b>Postal Code:</b> {postal_code}
-        </div>
-        """,
+        "html": "<b>Business:</b> {name}<br/><b>Activity:</b> {activity}",
         "style": {
-            "backgroundColor": "#2E2E2E",
-            "color": "white",
-            "fontFamily": "Arial, sans-serif"
+            "backgroundColor": "steelblue",
+            "color": "white"
         }
     }
     
     return pdk.Deck(
         layers=[layer],
         initial_view_state=view_state,
-        tooltip=tooltip,
-        map_style='light'  # Estilo de mapa más simple que debería funcionar
+        tooltip=tooltip
     )
 
 # Streamlit UI Configuration
@@ -284,7 +208,6 @@ with st.sidebar:
     3. Optional: Add a date filter
     4. Click 'Search Businesses'
     5. View results on the map and table
-    6. Different colors represent different postal codes
     """)
     
     st.markdown("### 📊 API Status")
@@ -299,7 +222,7 @@ with st.sidebar:
         st.error("❌ Cannot connect to Flask API")
 
 # Main content area
-st.title("📍 BizLens Business Locator - Colored by Postal Code")
+st.title("📍 BizLens Business Locator (Beta)")
 st.markdown("---")
 
 # Store search parameters when button is clicked
@@ -362,55 +285,24 @@ if st.session_state.search_params:
             lat, lon, names, activities, postal_codes, business_df = get_cords(data)
             
             if not business_df.empty:
-                # Create map dataframe with colors
-                map_df, color_map = create_map_dataframe(lat, lon, names, activities, postal_codes)
-                
-                # Display color legend
-                st.subheader("🎨 Postal Code Color Legend")
-                if color_map:
-                    # Create a legend with colors
-                    unique_codes = sorted(list(set(postal_codes)))
-                    cols = st.columns(min(5, len(unique_codes)))
-                    
-                    for idx, code in enumerate(unique_codes):
-                        col_idx = idx % 5
-                        with cols[col_idx]:
-                            color = color_map[code]
-                            # Create a colored box using HTML/CSS
-                            st.markdown(f"""
-                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                                <div style="width: 20px; height: 20px; background-color: rgba({color[0]}, {color[1]}, {color[2]}, {color[3]/255}); 
-                                            border-radius: 3px; margin-right: 10px;"></div>
-                                <span>CP: {code}</span>
-                            </div>
-                            """, unsafe_allow_html=True)
-                
                 # Display map
                 st.subheader("📍 Business Locations on Map")
                 
-                # Option 1: Simple Streamlit map (no colors diferenciados)
-                tab1, tab2 = st.tabs(["Simple Map", "Colored Map by Postal Code"])
+                # Option 1: Simple Streamlit map
+                tab1, tab2 = st.tabs(["Simple Map", "Advanced Map"])
                 
                 with tab1:
-                    # Simple map without colors
-                    simple_map_df = pd.DataFrame({
-                        'lat': lat,
-                        'lon': lon,
-                        'name': names,
-                        'activity': activities
-                    })
-                    if not simple_map_df.empty:
-                        st.map(simple_map_df, use_container_width=True)
+                    map_df = create_map_dataframe(lat, lon, names, activities)
+                    if not map_df.empty:
+                        st.map(map_df, use_container_width=True)
                     else:
                         st.warning("No valid coordinates found for mapping.")
                 
                 with tab2:
                     if not map_df.empty:
-                        deck = create_pydeck_layer(map_df, color_map)
+                        deck = create_pydeck_layer(map_df)
                         if deck:
                             st.pydeck_chart(deck, use_container_width=True)
-                        else:
-                            st.error("Could not create the colored map.")
                     else:
                         st.info("Try the Simple Map tab for basic visualization.")
                 
@@ -520,15 +412,10 @@ st.markdown("""
 BizLens is a business location visualization tool that helps you find 
 and map businesses across municipalities in Baja California.
 
-**New Feature:** Postal Code Color Coding
-- Each postal code has a unique color on the map
-- Easily identify geographic distribution patterns
-- Legend shows color assignments
-
 **Features:**
 - Search businesses by name keyword
 - Filter by registration date
-- Visualize locations on interactive maps with color coding
+- Visualize locations on interactive maps
 - View detailed business information including postal codes
 - Download results as CSV
 
