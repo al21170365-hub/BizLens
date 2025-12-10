@@ -204,14 +204,19 @@ def create_pydeck_layer(df, color_map):
         'ScatterplotLayer',
         data=df,
         get_position=['lon', 'lat'],
-        get_color='color',  # Usar la columna de color
-        get_radius=50,
+        get_color='color',
+        get_radius=50,  # Este valor es el tamaño base
+        radius_min_pixels=3,     # Tamaño mínimo en píxeles (siempre visible)
+        radius_max_pixels=3,   # Tamaño máximo en píxeles
+        radius_scale=1,          # Escala del radio
         pickable=True,
         auto_highlight=True,
         filled=True,
         stroked=True,
-        line_width_scale=1,
-        line_width_min_pixels=1
+        line_width_min_pixels=1,
+        line_width_max_pixels=3,
+        # Ajustar la escala según el zoom
+        radius_units='pixels'  # Usar píxeles en lugar de metros
     )
     
     # Calculate center of the map
