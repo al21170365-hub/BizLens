@@ -185,17 +185,19 @@ def get_data(data_source, data_type):
                     e.id as id,
                     e.nom_estab,
                     a.nombre_act,
+                    l.cod_postal,
                     e.latitud,
                     e.longitud,
                     e.fecha_alta
                 FROM establecimientos e
                 LEFT JOIN actividades a ON e.codigo_act = a.codigo_act
+                LEFT JOIN localidades l ON e.dirs_asent = l.id
             '''
             cursor.execute(query)
             results = cursor.fetchall()
             
             # Convert to DataFrame for consistency
-            df = pd.DataFrame(results, columns=['id', 'nom_estab', 'nombre_act', 'latitud', 'longitud', 'fecha_alta'])
+            df = pd.DataFrame(results, columns=['id', 'nom_estab', 'nombre_act', 'cod_postal', 'latitud', 'longitud', 'fecha_alta'])
             return df
         except Exception as e:
             raise Exception(f"Error reading SQLite data: {str(e)}")
