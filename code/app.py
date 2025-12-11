@@ -1,6 +1,10 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request# Después de las importaciones existentes en app.py
+from auth.decorators import token_required
+from auth.usage_limiter import UsageLimiter
+from auth.jwt_handler import JWTHandler
 from datetime import datetime, date
 from math import ceil
+import jwt
 import pandas as pd
 import sqlite3
 import os
