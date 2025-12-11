@@ -78,6 +78,12 @@ if 'current_data' not in st.session_state:
     st.session_state.current_data = None
 if 'search_params' not in st.session_state:
     st.session_state.search_params = {}
+if 'token' not in st.session_state:
+    st.session_state.token = None
+if 'user_info' not in st.session_state:
+    st.session_state.user_info = None
+if 'usage_info' not in st.session_state:
+    st.session_state.usage_info = None
 
 # Función para generar colores únicos basados en códigos postales
 def generate_colors_for_postal_codes(postal_codes):
@@ -140,6 +146,12 @@ def get_negocio(municipio, word, fecha, page):
     Returns:
         JSON response data or None if all requests fail
     """
+    if not token:
+        st.error("No estás autenticado. Por favor inicia sesión.")
+        return None
+    
+    headers = {'Authorization': f'Bearer {token}'}
+
     excel_url = f"http://127.0.0.1:5000/api/excel/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}&per_page=50"
     sqlite_url = f"http://127.0.0.1:5000/api/sqlite/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}&per_page=50"
     
@@ -154,6 +166,16 @@ def get_negocio(municipio, word, fecha, page):
             print(url)
             response = requests.get(url, timeout=15)
             
+            # Manejar límite de uso
+            if response.status_code == 429:
+                error_data = response.json()
+                st.error(f"⛔ {error_data.get('message', 'Límite diario alcanzado')}")
+                return None
+            # Manejar token inválido
+            if response.status_code == 401:
+                error_data = response.json()
+                st.error(f"🔑 {error_data.get('message', 'Token inválido o expirado')}")
+                return None
             # Handle specific status codes
             if response.status_code == 400:
                 error_data = response.json()
