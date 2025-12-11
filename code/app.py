@@ -539,6 +539,19 @@ def search_excel():
 
 @app.route("/api/sqlite/negocio", methods=['GET'])
 def search_sqlite():
+    from flask import g
+    
+    # Verificar límite de uso
+    user_id = g.current_user['user_id']
+    can_use, message = usage_limiter.check_and_increment_usage(user_id, max_uses=100)
+    
+    if not can_use:
+        return jsonify({
+            "success": False,
+            "message": message,
+            "code": "LIMIT_EXCEEDED"
+        }), 429
+
     municipio = request.args.get('municipio')
     word = request.args.get('word')
     fecha = request.args.get('date')
