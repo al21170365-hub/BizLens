@@ -354,6 +354,101 @@ st.set_page_config(
 
 # Sidebar for search controls
 with st.sidebar:
+    st.title("🔐 Autenticación")
+    
+    # Sección de login/registro si no hay token
+    if not st.session_state.token:
+        auth_tab1, auth_tab2 = st.tabs(["Iniciar Sesión", "Registrarse"])
+        
+        with auth_tab1:
+            login_username = st.text_input("Nombre de usuario:", key="login_username")
+            if st.button("🎯 Iniciar Sesión", key="login_button", use_container_width=True):
+                if login_username:
+                    with st.spinner("Iniciando sesión..."):
+                        token, user, usage, error = login_user(login_username)
+                        if token:
+                            st.session_state.token = token
+                            st.session_state.user_info = user
+                            st.session_state.usage_info = usage
+                            st.success(f"✅ ¡Bienvenido, {user['username']}!")
+                            st.rerun()
+                        else:
+                            st.error(f"❌ {error}")
+                else:
+                    st.warning("⚠️ Por favor ingresa un nombre de usuario")
+        
+        with auth_tab2:
+            reg_username = st.text_input("Nuevo usuario:", key="reg_username")
+            if st.button("📝 Registrarse", key="reg_button", use_container_width=True):
+                if reg_username:
+                    with st.spinner("Registrando usuario..."):
+                        token, user, error = register_user(reg_username)
+                        if token:
+                            st.session_state.token = token
+                            st.session_state.user_info = user
+                            st.success(f"✅ ¡Usuario {user['username']} registrado!")
+                            st.rerun()
+                        else:
+                            st.error(f"❌ {error}")
+                else:
+                    st.warning("⚠️ Por favor ingresa un nombre de usuario")
+        
+        st.markdown("---")
+        st.info("ℹ️ Debes iniciar sesión para usar las funciones de búsqueda.")
+        
+    else:
+        # Usuario autenticado - mostrar información
+        st.success(f"✅ Conectado como: **{st.session_state.user_info['username']}**")
+        
+        # Mostrar información de uso
+        if st.session_state.usage_info:
+            usage = st.session_state.usage_info
+        else:
+            # Obtener uso actual si no está en session state
+            usage = get_usage_info(st.session_state.token)
+            if usage:
+                st.session_state.usage_info = usage
+        
+        if usage:
+            used = usage.get('today', 0)
+            limit = usage.get('limit', 100)
+            remaining = usage.get('remaining', 100 - used)
+            percentage = (used / limit) * 100
+            
+            # Barra de progreso
+            st.progress(percentage / 100)
+            
+            # Métricas de uso
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Usados hoy", f"{used}/{limit}")
+            with col2:
+                st.metric("Disponibles", remaining)
+            
+            # Advertencia si está cerca del límite
+            if used >= 90:
+                st.warning(f"⚠️ Te quedan solo {remaining} usos hoy")
+            elif used >= 75:
+                st.info(f"ℹ️ Has usado {used} de {limit} usos")
+        
+        # Botón para actualizar uso
+        if st.button("🔄 Actualizar uso", use_container_width=True):
+            usage = get_usage_info(st.session_state.token)
+            if usage:
+                st.session_state.usage_info = usage
+                st.rerun()
+        
+        # Botón de cerrar sesión
+        if st.button("🚪 Cerrar Sesión", type="secondary", use_container_width=True):
+            st.session_state.token = None
+            st.session_state.user_info = None
+            st.session_state.usage_info = None
+            st.session_state.search_params = {}
+            st.session_state.current_data = None
+            st.success("✅ Sesión cerrada exitosamente")
+            st.rerun()
+        
+        st.markdown("---")
     st.title("🔍 Search Filters")
     
     municipio = st.text_input("Municipality/City:", 
