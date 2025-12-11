@@ -49,6 +49,19 @@ def get_usage_info(token):
         pass
     return None
 
+def check_auth_status(token):
+    """Verifica si el token es válido"""
+    if not token:
+        return False
+    
+    url = "http://127.0.0.1:5000/api/auth/status"
+    headers = {'Authorization': f'Bearer {token}'}
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        return response.status_code == 200
+    except:
+        return False
+
 
 # Initialize session state for page tracking and data caching
 if 'page' not in st.session_state:
