@@ -31,7 +31,7 @@ Inspired by classroom discussions and collaborations with fellow students.
 ## How to use
 ### Requierments
 - python 3.11
-- 
+
 ### Install, run flask and steamlit
 ```bash
 git clone https://github.com/al21170365-hub/BizLens.git
