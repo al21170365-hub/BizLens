@@ -333,6 +333,61 @@ def register():
         }
     }), 201
 
+@app.route("/api/auth/login", methods=['POST'])
+def login():
+    """Login de usuario"""
+    data = request.get_json()
+    
+    if not data or 'username' not in data:
+        return jsonify({
+            'success': False,
+            'message': 'Se requiere username'
+        }), 400
+    
+    username = data['username'].strip()
+    
+    # Buscar usuario existente
+    user = usage_limiter.get_user(username)
+    
+    if not user:
+        # Crear usuario si no existe (registro automático)
+        user_id = f"{hash(username)}_{int(datetime.now().timestamp())}"
+        success, message = usage_limiter.create_user(user_id, username)
+        
+        if not success:
+            return jsonify({
+                'success': False,
+                'message': message
+            }), 400
+        
+        user = {
+            'user_id': user_id,
+            'username': username,
+            'role': 'user'
+        }
+    
+    # Generar token JWT
+    token = JWTHandler.generate_token(user['user_id'], user['username'], user['role'])
+    
+    # Obtener uso actual
+    current_usage = usage_limiter.get_today_usage(user['user_id'])
+    
+    return jsonify({
+        'success': True,
+        'message': 'Login exitoso',
+        'token': token,
+        'user': {
+            'user_id': user['user_id'],
+            'username': user['username'],
+            'role': user['role']
+        },
+        'usage': {
+            'today': current_usage,
+            'limit': 100,
+            'remaining': 100 - current_usage
+        }
+    }), 200
+
 @app.route("/api/excel/negocio", methods=['GET'])
 def search_excel():
     municipio = request.args.get('municipio')
