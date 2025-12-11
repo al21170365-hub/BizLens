@@ -27,3 +27,24 @@ BizLens is a web application that enables users to filter and visualize business
 ## 📋 Background
 
 Inspired by classroom discussions and collaborations with fellow students.
+
+## How to use
+### Requierments
+- python 3.11
+- 
+### Install, run flask and steamlit
+```bash
+git clone https://github.com/al21170365-hub/BizLens.git
+cd BizLens
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r code/requerimientos.txt
+cd code
+flask run
+```
+### Open another terminal window
+```bash
+cd path/to/your/proyect/BizLens
+source venv/bin/activate
+streamlit run map.py
+```
