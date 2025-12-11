@@ -527,7 +527,8 @@ if st.session_state.search_params:
             params['municipio'],
             params['word'],
             params['fecha'],
-            st.session_state.page
+            st.session_state.page,
+            st.session_state.token  # ← Agregar token aquí
         )
         
         if data and data.get('success'):
