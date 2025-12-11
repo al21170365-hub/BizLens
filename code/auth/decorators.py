@@ -1,6 +1,7 @@
-# auth/decorators.py
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify, current_app, g
+import jwt
+from datetime import datetime
 from auth.jwt_handler import JWTHandler
 
 def token_required(f):
@@ -40,7 +41,6 @@ def token_required(f):
             }), 401
 
         # Agregar información del usuario al contexto
-        from flask import g
         g.current_user = payload
         
         return f(*args, **kwargs)

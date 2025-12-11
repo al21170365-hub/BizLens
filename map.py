@@ -164,7 +164,8 @@ def get_negocio(municipio, word, fecha, page, token):
         try:
             st.info(f"Trying {endpoint_name}...")
             print(url)
-            response = requests.get(url, timeout=15)
+            print(headers)
+            response = requests.get(url, headers=headers, timeout=15)
             
             # Manejar límite de uso
             if response.status_code == 429:

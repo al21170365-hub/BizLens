@@ -1,13 +1,13 @@
 from flask import Flask, render_template, jsonify, request# Después de las importaciones existentes en app.py
-from auth.decorators import token_required
-from auth.usage_limiter import UsageLimiter
-from auth.jwt_handler import JWTHandler
 from datetime import datetime, date
 from math import ceil
-import jwt
 import pandas as pd
 import sqlite3
 import os
+import jwt
+from auth.decorators import token_required
+from auth.usage_limiter import UsageLimiter
+from auth.jwt_handler import JWTHandler
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'clave-secreta-para-jwt-cambiar-en-produccion'
@@ -399,6 +399,7 @@ def get_usage():
     from flask import g
     
     user_id = g.current_user['user_id']
+    print(f"[DEBUG] Excel endpoint - User: {user_id}")  # Debug log
     current_usage = usage_limiter.get_today_usage(user_id)
     
     return jsonify({
@@ -425,6 +426,7 @@ def auth_status():
     }), 200
 
 @app.route("/api/excel/negocio", methods=['GET'])
+@token_required
 def search_excel():
     from flask import g
     
@@ -542,6 +544,7 @@ def search_excel():
         }), 500
 
 @app.route("/api/sqlite/negocio", methods=['GET'])
+@token_required
 def search_sqlite():
     from flask import g
     
