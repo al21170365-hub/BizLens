@@ -56,10 +56,14 @@ current_data_type = None
 
 @app.route("/api")
 def working():
-    print("Hello world")
     return jsonify({
         "success": True,
-        "message": "App up and running!"
+        "message": "App up and running!",
+        "endpoints": {
+            "public": ["/api", "/api/auth/register", "/api/auth/login"],
+            "protected": ["/api/excel/negocio", "/api/sqlite/negocio", "/api/auth/usage", "/api/auth/status"]
+        },
+        "usage_limit": 100
     }), 200
 
 def load_municipio_data(municipio,id):
