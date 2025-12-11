@@ -62,6 +62,14 @@ def check_auth_status(token):
     except:
         return False
 
+def decode_token_info(token):
+    """Decodifica el token para mostrar información (solo lectura)"""
+    try:
+        # Decodificar sin verificar firma (solo para mostrar info)
+        payload = jwt.decode(token, options={"verify_signature": False})
+        return payload
+    except:
+        return None
 
 # Initialize session state for page tracking and data caching
 if 'page' not in st.session_state:
