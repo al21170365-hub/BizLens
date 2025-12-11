@@ -290,6 +290,49 @@ def validate_date(date_str):
     except ValueError:
         return False, f"Invalid date format. Use YYYY/MM/DD, you used: {date_str}"
 
+@app.route("/api/auth/register", methods=['POST'])
+def register():
+    """Registra un nuevo usuario"""
+    data = request.get_json()
+    
+    if not data or 'username' not in data:
+        return jsonify({
+            'success': False,
+            'message': 'Se requiere username'
+        }), 400
+    
+    username = data['username'].strip()
+    
+    if len(username) < 3:
+        return jsonify({
+            'success': False,
+            'message': 'Username debe tener al menos 3 caracteres'
+        }), 400
+    
+    # Generar ID único basado en username y timestamp
+    user_id = f"{hash(username)}_{int(datetime.now().timestamp())}"
+    
+    success, message = usage_limiter.create_user(user_id, username)
+    
+    if not success:
+        return jsonify({
+            'success': False,
+            'message': message
+        }), 400
+    
+    # Generar token JWT
+    token = JWTHandler.generate_token(user_id, username)
+    
+    return jsonify({
+        'success': True,
+        'message': 'Usuario registrado exitosamente',
+        'token': token,
+        'user': {
+            'user_id': user_id,
+            'username': username
+        }
+    }), 201
+
 @app.route("/api/excel/negocio", methods=['GET'])
 def search_excel():
     municipio = request.args.get('municipio')
