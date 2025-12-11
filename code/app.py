@@ -10,6 +10,8 @@ import sqlite3
 import os
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'clave-secreta-para-jwt-cambiar-en-produccion'
+usage_limiter = UsageLimiter()
 
 main_data_bases = [
     "./exel_data/Establecimientos_Ensenada_BJCA.xlsx",
