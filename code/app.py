@@ -388,6 +388,38 @@ def login():
         }
     }), 200
 
+@app.route("/api/auth/usage", methods=['GET'])
+@token_required
+def get_usage():
+    """Obtiene el uso actual del día"""
+    from flask import g
+    
+    user_id = g.current_user['user_id']
+    current_usage = usage_limiter.get_today_usage(user_id)
+    
+    return jsonify({
+        'success': True,
+        'usage': {
+            'today': current_usage,
+            'limit': 100,
+            'remaining': 100 - current_usage,
+            'percentage': (current_usage / 100) * 100
+        }
+    }), 200
+
+@app.route("/api/auth/status", methods=['GET'])
+@token_required
+def auth_status():
+    """Verifica estado de autenticación"""
+    from flask import g
+    
+    return jsonify({
+        'success': True,
+        'authenticated': True,
+        'user': g.current_user,
+        'message': 'Token válido'
+    }), 200
+
 @app.route("/api/excel/negocio", methods=['GET'])
 def search_excel():
     municipio = request.args.get('municipio')
