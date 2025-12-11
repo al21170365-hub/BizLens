@@ -32,6 +32,24 @@ def login_user(username):
         return None, None, None, f"Error de conexión: {str(e)}"
 
 
+def get_usage_info(token):
+    """Obtiene información de uso actual"""
+    if not token:
+        return None
+    
+    url = "http://127.0.0.1:5000/api/auth/usage"
+    headers = {'Authorization': f'Bearer {token}'}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            if data['success']:
+                return data['usage']
+    except:
+        pass
+    return None
+
+
 # Initialize session state for page tracking and data caching
 if 'page' not in st.session_state:
     st.session_state.page = 1
