@@ -7,6 +7,7 @@ import jwt
 
 def register_user(username):
     """Registra un nuevo usuario"""
+    # url = "http://localhost/api/auth/register"
     url = "http://127.0.0.1:5000/api/auth/register"
     try:
         response = requests.post(url, json={'username': username}, timeout=10)
@@ -20,6 +21,7 @@ def register_user(username):
 
 def login_user(username):
     """Inicia sesión con un usuario"""
+    # url = "http://localhost/api/auth/login"
     url = "http://127.0.0.1:5000/api/auth/login"
     try:
         response = requests.post(url, json={'username': username}, timeout=10)
@@ -37,6 +39,7 @@ def get_usage_info(token):
     if not token:
         return None
     
+    # url = "http://localhost/api/auth/usage"
     url = "http://127.0.0.1:5000/api/auth/usage"
     headers = {'Authorization': f'Bearer {token}'}
     try:
@@ -54,6 +57,7 @@ def check_auth_status(token):
     if not token:
         return False
     
+    # url = "http://localhost/api/auth/status"
     url = "http://127.0.0.1:5000/api/auth/status"
     headers = {'Authorization': f'Bearer {token}'}
     try:
@@ -101,21 +105,21 @@ def generate_colors_for_postal_codes(postal_codes):
     
     # Colores predefinidos para mejor visibilidad
     predefined_colors = [
-        [255, 0, 0, 160],    # Rojo
-        [0, 255, 0, 160],    # Verde
-        [0, 0, 255, 160],    # Azul
-        [255, 255, 0, 160],  # Amarillo
-        [255, 0, 255, 160],  # Magenta
-        [0, 255, 255, 160],  # Cian
-        [255, 165, 0, 160],  # Naranja
-        [128, 0, 128, 160],  # Púrpura
-        [165, 42, 42, 160],  # Marrón
-        [0, 128, 0, 160],    # Verde oscuro
-        [128, 128, 0, 160],  # Oliva
-        [0, 128, 128, 160],  # Verde azulado
-        [128, 0, 0, 160],    # Rojo oscuro
-        [0, 0, 128, 160],    # Azul marino
-        [128, 128, 128, 160], # Gris
+        [255, 0, 0, 160],    
+        [0, 255, 0, 160],    
+        [0, 0, 255, 160],    
+        [255, 255, 0, 160],  
+        [255, 0, 255, 160],  
+        [0, 255, 255, 160],  
+        [255, 165, 0, 160],  
+        [128, 0, 128, 160],  
+        [165, 42, 42, 160],  
+        [0, 128, 0, 160],  
+        [128, 128, 0, 160],  
+        [0, 128, 128, 160], 
+        [128, 0, 0, 160],   
+        [0, 0, 128, 160],  
+        [128, 128, 128, 160],
     ]
     
     # Asignar colores predefinidos primero, luego generar aleatorios si hay más
@@ -125,10 +129,10 @@ def generate_colors_for_postal_codes(postal_codes):
         else:
             # Generar color aleatorio pero evitando colores muy claros
             color_map[code] = [
-                random.randint(30, 225),  # R
-                random.randint(30, 225),  # G
-                random.randint(30, 225),  # B
-                160  # Alpha (transparencia)
+                random.randint(30, 225),  
+                random.randint(30, 225),  
+                random.randint(30, 225),  
+                160  
             ]
     
     return color_map
@@ -152,6 +156,8 @@ def get_negocio(municipio, word, fecha, page, token):
     
     headers = {'Authorization': f'Bearer {token}'}
 
+    # excel_url = f"http://localhost/api/excel/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}&per_page=50"
+    # sqlite_url = f"http://localhost/api/sqlite/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}&per_page=50"
     excel_url = f"http://127.0.0.1:5000/api/excel/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}&per_page=50"
     sqlite_url = f"http://127.0.0.1:5000/api/sqlite/negocio?municipio={municipio}&word={word}&date={fecha}&page={page}&per_page=50"
     
@@ -279,7 +285,7 @@ def create_map_dataframe(lat, lon, names, activities, postal_codes):
         'activity': activities,
         'postal_code': postal_codes,
         'color': [color_map.get(code, [200, 30, 0, 160]) for code in postal_codes],
-        'size': [15] * len(lat)  # Fixed size for all markers
+        'size': [15] * len(lat) 
     }
     
     return pd.DataFrame(data), color_map
@@ -295,18 +301,17 @@ def create_pydeck_layer(df, color_map):
         data=df,
         get_position=['lon', 'lat'],
         get_color='color',
-        get_radius=50,  # Este valor es el tamaño base
-        radius_min_pixels=3,     # Tamaño mínimo en píxeles (siempre visible)
-        radius_max_pixels=3,   # Tamaño máximo en píxeles
-        radius_scale=1,          # Escala del radio
+        get_radius=50,
+        radius_min_pixels=3,
+        radius_max_pixels=3,
+        radius_scale=1,
         pickable=True,
         auto_highlight=True,
         filled=True,
         stroked=True,
         line_width_min_pixels=1,
         line_width_max_pixels=3,
-        # Ajustar la escala según el zoom
-        radius_units='pixels'  # Usar píxeles en lugar de metros
+        radius_units='pixels'
     )
     
     # Calculate center of the map
@@ -314,7 +319,7 @@ def create_pydeck_layer(df, color_map):
         center_lat = df['lat'].mean()
         center_lon = df['lon'].mean()
     else:
-        center_lat, center_lon = 32.5333, -117.0167  # Default center (Tijuana)
+        center_lat, center_lon = 32.5333, -117.0167
     
     view_state = pdk.ViewState(
         latitude=center_lat,
@@ -343,7 +348,7 @@ def create_pydeck_layer(df, color_map):
         layers=[layer],
         initial_view_state=view_state,
         tooltip=tooltip,
-        map_style='light'  # Estilo de mapa más simple que debería funcionar
+        # map_style='light'
     )
 
 # Streamlit UI Configuration
@@ -480,6 +485,7 @@ with st.sidebar:
     st.markdown("### 📊 API Status")
     # Simple API status check
     try:
+        # status_response = requests.get("http://localhost/api", timeout=5)
         status_response = requests.get("http://127.0.0.1:5000/api", timeout=5)
         if status_response.status_code == 200:
             st.success("✅ Flask API is running")

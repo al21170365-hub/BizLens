@@ -13,42 +13,42 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'clave-secreta-para-jwt-cambiar-en-produccion'
 usage_limiter = UsageLimiter()
 
-main_data_bases = [
-    "./exel_data/Establecimientos_Ensenada_BJCA.xlsx",
-    "./exel_data/Establecimientos_Mexicali_BJCA.xlsx",
-    "./exel_data/Establecimientos_Playas_de_Rosarito_BJCA.xlsx",
-    "./exel_data/Establecimientos_San_Felipe_BJCA.xlsx",
-    "./exel_data/Establecimientos_San_Quintin_BJCA.xlsx",
-    "./exel_data/Establecimientos_Tecate_BJCA.xlsx",
-    "./exel_data/Establecimientos_Tijuana_BJCA.xlsx",
-]
-backup_data_bases = [
-    "./sqlite_data/Ensenada_Baja_California.db",
-    "./sqlite_data/Mexicali_Baja_California.db",
-    "./sqlite_data/Playas_de_Rosarito_Baja_California.db",
-    "./sqlite_data/San_Felipe_Baja_California.db",
-    "./sqlite_data/San_Quintin_Baja_California.db",
-    "./sqlite_data/Tecate_Baja_California.db",
-    "./sqlite_data/Tijuana_Baja_California.db",
-]
 # main_data_bases = [
-#     "./code/exel_data/Establecimientos_Ensenada_BJCA.xlsx",
-#     "./code/exel_data/Establecimientos_Mexicali_BJCA.xlsx",
-#     "./code/exel_data/Establecimientos_Playas_de_Rosarito_BJCA.xlsx",
-#     "./code/exel_data/Establecimientos_San_Felipe_BJCA.xlsx",
-#     "./code/exel_data/Establecimientos_San_Quintin_BJCA.xlsx",
-#     "./code/exel_data/Establecimientos_Tecate_BJCA.xlsx",
-#     "./code/exel_data/Establecimientos_Tijuana_BJCA.xlsx",
+#     "./exel_data/Establecimientos_Ensenada_BJCA.xlsx",
+#     "./exel_data/Establecimientos_Mexicali_BJCA.xlsx",
+#     "./exel_data/Establecimientos_Playas_de_Rosarito_BJCA.xlsx",
+#     "./exel_data/Establecimientos_San_Felipe_BJCA.xlsx",
+#     "./exel_data/Establecimientos_San_Quintin_BJCA.xlsx",
+#     "./exel_data/Establecimientos_Tecate_BJCA.xlsx",
+#     "./exel_data/Establecimientos_Tijuana_BJCA.xlsx",
 # ]
 # backup_data_bases = [
-#     "./code/sqlite_data/Ensenada_Baja_California.db",
-#     "./code/sqlite_data/Mexicali_Baja_California.db",
-#     "./code/sqlite_data/Playas_de_Rosarito_Baja_California.db",
-#     "./code/sqlite_data/San_Felipe_Baja_California.db",
-#     "./code/sqlite_data/San_Quintin_Baja_California.db",
-#     "./code/sqlite_data/Tecate_Baja_California.db",
-#     "./code/sqlite_data/Tijuana_Baja_California.db",
+#     "./sqlite_data/Ensenada_Baja_California.db",
+#     "./sqlite_data/Mexicali_Baja_California.db",
+#     "./sqlite_data/Playas_de_Rosarito_Baja_California.db",
+#     "./sqlite_data/San_Felipe_Baja_California.db",
+#     "./sqlite_data/San_Quintin_Baja_California.db",
+#     "./sqlite_data/Tecate_Baja_California.db",
+#     "./sqlite_data/Tijuana_Baja_California.db",
 # ]
+main_data_bases = [
+    "./code/exel_data/Establecimientos_Ensenada_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Mexicali_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Playas_de_Rosarito_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_San_Felipe_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_San_Quintin_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Tecate_BJCA.xlsx",
+    "./code/exel_data/Establecimientos_Tijuana_BJCA.xlsx",
+]
+backup_data_bases = [
+    "./code/sqlite_data/Ensenada_Baja_California.db",
+    "./code/sqlite_data/Mexicali_Baja_California.db",
+    "./code/sqlite_data/Playas_de_Rosarito_Baja_California.db",
+    "./code/sqlite_data/San_Felipe_Baja_California.db",
+    "./code/sqlite_data/San_Quintin_Baja_California.db",
+    "./code/sqlite_data/Tecate_Baja_California.db",
+    "./code/sqlite_data/Tijuana_Baja_California.db",
+]
 
 # Global variables to store current database connection
 current_data_source = None
