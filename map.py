@@ -3,6 +3,20 @@ import pandas as pd
 import requests
 import pydeck as pdk  # Added for better map visualization
 import random
+import jwt
+
+def register_user(username):
+    """Registra un nuevo usuario"""
+    url = "http://127.0.0.1:5000/api/auth/register"
+    try:
+        response = requests.post(url, json={'username': username}, timeout=10)
+        if response.status_code == 201:
+            data = response.json()
+            if data['success']:
+                return data['token'], data['user'], None
+        return None, None, f"Error: {response.json().get('message', 'Unknown error')}"
+    except Exception as e:
+        return None, None, f"Error de conexión: {str(e)}"
 
 # Initialize session state for page tracking and data caching
 if 'page' not in st.session_state:
