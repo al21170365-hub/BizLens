@@ -133,7 +133,7 @@ def generate_colors_for_postal_codes(postal_codes):
     
     return color_map
 
-def get_negocio(municipio, word, fecha, page):
+def get_negocio(municipio, word, fecha, page, token):
     """
     Fetch business data from API with fallback to SQLite endpoint.
     
